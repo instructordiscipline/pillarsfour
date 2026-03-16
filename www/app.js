@@ -15,23 +15,6 @@ function getCapacitorPlugins(){
 }
 
 
-const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-
-async function getCapacitorPlugins(){
-  if(!isNativeApp) return null;
-  try{
-    const [{ App }, { Filesystem, Directory }, { Share }] = await Promise.all([
-      import("@capacitor/app"),
-      import("@capacitor/filesystem"),
-      import("@capacitor/share"),
-    ]);
-    return { App, Filesystem, Directory, Share };
-  }catch(err){
-    console.error("Capacitor plugin load failed", err);
-    return null;
-  }
-}
-
 
 const $ = (sel, root=document) => root.querySelector(sel);
 
