@@ -462,3 +462,16 @@ canvas#gridCanvas{
   transform: translateX(-50%) translateY(0);
 }
 
+
+
+.export-panel{
+  margin-top: 12px;
+}
+.export-panel textarea{
+  width: 100%;
+  min-height: 180px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  resize: vertical;
+}

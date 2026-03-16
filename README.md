@@ -112,6 +112,3 @@ Latest updates:
 Android-native patch:
 - Uses Capacitor App plugin for back button handling
 - Uses Filesystem + Share for PNG and backup export on Android
-
-
-Blank-screen fix: removed duplicate Capacitor helper declarations in www/app.js.
