@@ -115,3 +115,6 @@ Android-native patch:
 
 
 This package is flattened correctly for direct repo upload. Upload the FILES/FOLDERS in this package to the repo root, not a parent wrapper folder.
+
+
+Export fix: uses Capacitor global plugins + Filesystem DOCUMENTS directory and Share sheet for Android.
