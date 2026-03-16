@@ -4,6 +4,19 @@ import { GridRenderer } from "./grid.js";
 
 const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 
+function getCapacitorPlugins(){
+  if(!isNativeApp || !window.Capacitor) return null;
+  const plugins = window.Capacitor.Plugins || {};
+  return {
+    App: plugins.App || null,
+    Filesystem: plugins.Filesystem || null,
+    Share: plugins.Share || null,
+  };
+}
+
+
+const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
 async function getCapacitorPlugins(){
   if(!isNativeApp) return null;
   try{
@@ -249,7 +262,7 @@ async function renderDashboard(app){
   const imgPanel = $("#imgPanel"); let latestBlob = null; $("#toggleImg").addEventListener("click", ()=> imgPanel.classList.toggle("collapsed"));
   const pngImg = $("#pngImg");
   $("#genPng").addEventListener("click", async ()=>{ toast("success","Generating PNG…"); latestBlob = await renderer.exportPNG(); pngImg.src = URL.createObjectURL(latestBlob); toast("success","PNG ready ✅"); });
-  $("#downloadPng").addEventListener("click", async ()=>{ if(!latestBlob){ toast("success","Generating PNG…"); latestBlob = await renderer.exportPNG(); pngImg.src = URL.createObjectURL(latestBlob); } const ok = await saveBlobMobileFriendly(latestBlob, "life-grid.png"); if(ok) toast("success","PNG export opened ✅"); });
+  $("#downloadPng").addEventListener("click", async ()=>{ if(!latestBlob){ toast("success","Generating PNG…"); latestBlob = await renderer.exportPNG(); pngImg.src = URL.createObjectURL(latestBlob); } const ok = await saveBlobMobileFriendly(latestBlob, "life-grid.png"); if(ok) toast("success","PNG file created ✅"); });
   let resizeTimer = null; window.addEventListener("resize", ()=>{ clearTimeout(resizeTimer); resizeTimer = setTimeout(()=> renderer.render(), 90); });
 }
 
@@ -288,7 +301,7 @@ function renderSettings(app){
   list.addEventListener("input", (ev)=>{ const inp = ev.target.closest("input"); if(!inp) return; const p = cfgLocal.pillars.find(x=>x.id===inp.dataset.id); if(p) p[inp.dataset.field] = inp.value; });
   list.addEventListener("click", (ev)=>{ const rem = ev.target.closest("button")?.dataset.remove; if(rem){ cfgLocal.pillars = cfgLocal.pillars.filter(p=>p.id!==rem); cfgLocal.pillars.sort((a,b)=> (a.order||0)-(b.order||0)).forEach((p,i)=> p.order=i+1); renderList(); } });
   $("#addPillar").addEventListener("click", ()=>{ cfgLocal.pillars.push({ id: crypto.randomUUID(), key:"", name:"", target:"", effectiveDate: isoDate(new Date()), order: (cfgLocal.pillars?.length || 0) + 1 }); renderList(); });
-  $("#exportBackup").addEventListener("click", async ()=>{ const ok = await saveBlobMobileFriendly(new Blob([JSON.stringify(await exportAllData(), null, 2)], { type: "application/json" }), "life-grid-backup.json"); if(ok) toast("success","Backup export opened ✅"); });
+  $("#exportBackup").addEventListener("click", async ()=>{ const ok = await saveBlobMobileFriendly(new Blob([JSON.stringify(await exportAllData(), null, 2)], { type: "application/json" }), "life-grid-backup.json"); if(ok) toast("success","Backup file created ✅"); });
   $("#restoreBackup").addEventListener("change", async (ev)=>{ const file = ev.target.files?.[0]; if(!file) return; try{ await restoreAllData(JSON.parse(await file.text())); toast("success","Backup restored ✅"); window.location.reload(); } catch { toast("error","Backup restore failed."); } });
   $("#settingsForm").addEventListener("submit", async (ev)=>{ ev.preventDefault(); cfgLocal.displayName = $("#sName").value.trim(); cfgLocal.lifespanYears = Number($("#sLife").value || 85); cfgLocal.defaultView = $("#sDefaultView").value || "month"; await setConfig(cfgLocal); toast("success","Settings saved ✅"); });
   (async ()=>{ cfgLocal = JSON.parse(JSON.stringify(await getConfig())); $("#sName").value = cfgLocal.displayName || ""; $("#sLife").value = cfgLocal.lifespanYears || 85; $("#sDefaultView").value = cfgLocal.defaultView || "month"; renderList(); })();
@@ -307,29 +320,24 @@ async function render(){
 let __lastBackPress = 0;
 function showBackExitToast(){
   const existing = document.querySelector("#back-exit-toast");
-  if (existing) existing.remove();
+  if(existing) existing.remove();
   const el = document.createElement("div");
   el.id = "back-exit-toast";
   el.className = "back-exit-toast";
   el.textContent = "Tap the back button again to exit";
   document.body.appendChild(el);
   requestAnimationFrame(()=> el.classList.add("show"));
-  setTimeout(()=>{
-    el.classList.remove("show");
-    setTimeout(()=> el.remove(), 220);
-  }, 1600);
+  setTimeout(()=>{ el.classList.remove("show"); setTimeout(()=> el.remove(), 220); }, 1600);
 }
 
 async function installAndroidBackGuard(){
   if(window.__lifeGridBackGuardInstalled) return;
   window.__lifeGridBackGuardInstalled = true;
 
-  const plugins = await getCapacitorPlugins();
-  if(!plugins){
-    return;
-  }
+  const plugins = getCapacitorPlugins();
+  if(!plugins || !plugins.App) return;
 
-  plugins.App.addListener("backButton", ({ canGoBack }) => {
+  await plugins.App.addListener("backButton", () => {
     const hash = window.location.hash || "#/dashboard";
     const onDashboard = hash.startsWith("#/dashboard");
 
