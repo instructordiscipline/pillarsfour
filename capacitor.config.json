@@ -1,0 +1,11 @@
+{
+  "appId": "com.lifegrid.app",
+  "appName": "Life Grid",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "App": {
+      "disableBackButtonHandler": true
+    }
+  }
+}
